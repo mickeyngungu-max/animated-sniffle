@@ -1,0 +1,140 @@
+from logging import root
+import tkinter as tk
+from tkinter import ttk
+from tkinter import messagebox
+
+root = tk.Tk()
+root.title("Simple Smart Apartment")
+root.geometry("700x520")
+
+temperature = tk.IntVar(value=22)
+light_on = tk.BooleanVar(value=False)
+door_locked = tk.BooleanVar(value=True)
+bin_level = tk.IntVar(value=25)
+
+
+
+def update_status(event_data=None):
+    """Refreshes the big text box with the latest values."""
+    
+    status_text_box.delete("1.0", tk.END)
+    
+   
+    if light_on.get() == True:
+        light_word = "ON"
+    else:
+        light_word = "OFF"
+        
+    if door_locked.get() == True:
+        door_word = "LOCKED"
+    else:
+        door_word = "UNLOCKED"
+        
+   
+    report_string = f"Temperature: {temperature.get()}°C\n"
+    report_string += f"Lights: {light_word}\n"
+    report_string += f"Door: {door_word}\n"
+    report_string += f"Dustbin: {bin_level.get()}% full\n"
+    
+   
+    status_text_box.insert(tk.END, report_string)
+
+#trash bin buttons 
+
+def add_trash():
+    """Adds 10% more trash to the bin."""
+    current_amt = bin_level.get()
+    new_amt = current_amt + 10
+    
+    
+    if new_amt > 100:
+        new_amt = 100
+        
+    bin_level.set(new_amt)
+    
+    
+    if new_amt >= 80:
+        messagebox.showwarning("Alert", "Dustbin is nearly full!")
+        
+    update_status()
+
+
+def empty_bin():
+    """Resets the trash bin back to 0%."""
+    bin_level.set(0)
+    update_status()
+
+
+def generate_report_popup():
+    """Grabs text from the box and displays it in a pop-up window."""
+    saved_text = status_text_box.get("1.0", tk.END)
+    messagebox.showinfo("Apartment Report", saved_text)
+
+# 4. BUILDING THE INTERFACE (Widgets)
+
+# Big bold Title
+
+title_label = tk.Label(root, text="Smart Apartment Control Panel", font=("Arial", 18, "bold"))
+title_label.pack(pady=10)
+
+# Main frame box to hold our controls
+
+main_frame = tk.Frame(root)
+main_frame.pack(fill="both", expand=True, padx=20, pady=10)
+
+# --- Temperature Slider ---
+
+temp_label = tk.Label(main_frame, text="Room Temperature (°C)")
+temp_label.pack(anchor="w")
+
+# Note: 'command=update_status' makes it run every time you slide it
+
+temp_scale = tk.Scale(main_frame, from_=15, to=35, orient="horizontal", 
+                     variable=temperature, command=update_status)
+temp_scale.pack(fill="x", pady=5)
+
+# --- Checkbuttons ---
+
+light_check = tk.Checkbutton(main_frame, text="Lights ON/OFF", 
+                             variable=light_on, command=update_status)
+light_check.pack(anchor="w", pady=5)
+
+door_check = tk.Checkbutton(main_frame, text="Door Locked", 
+                            variable=door_locked, command=update_status)
+door_check.pack(anchor="w", pady=5)
+
+# --- Progress Bar ---
+
+bin_label_text = tk.Label(main_frame, text="Dustbin Fill Level (%)")
+bin_label_text.pack(anchor="w")
+
+bin_bar = ttk.Progressbar(main_frame, maximum=100, variable=bin_level)
+bin_bar.pack(fill="x", pady=5)
+
+# --- Side-by-Side Trash Buttons Frame ---
+button_frame = tk.Frame(main_frame)
+button_frame.pack(pady=10)
+
+add_btn = tk.Button(button_frame, text="Add Trash", command=add_trash)
+add_btn.grid(row=0, column=0, padx=5)
+
+empty_btn = tk.Button(button_frame, text="Empty Bin", command=empty_bin)
+empty_btn.grid(row=0, column=1, padx=5)
+
+# --- Real-time Status Text Area ---
+status_text_box = tk.Text(main_frame, height=8)
+status_text_box.pack(fill="both", expand=True, pady=10)
+
+# --- Bottom Pop-up Trigger Button ---
+report_btn = tk.Button(root, text="Generate Report", command=generate_report_popup)
+report_btn.pack(pady=10)
+
+
+
+# 5. START UP
+
+# Run it once right away so the text box shows values instead of being empty
+update_status()
+
+# Keep the window running
+root.mainloop()
